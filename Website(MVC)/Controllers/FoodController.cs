@@ -7,23 +7,35 @@ namespace Website_MVC_.Controllers
     [Route("api/[controller]")]
     public class FoodController : ControllerBase
     {
-        private static List<Food> _Food = new List<Food>
+        private readonly FoodContext _context;
+
+        public FoodController(FoodContext context)
         {
-            new Food { FoodId = 1, Name = "Apple", ServingSize = 100, Calories = 52, Protein = 0.3f, Carbs = 13.8f, Fat = 0.2f }
-        };
+            _context = context;
+        }
 
         [HttpPost]
-        public IActionResult CreateFood(Food food)
+        public IActionResult CreateFood(FoodDto foodDto)
         {
-            food.FoodId = _Food.Max(f => f.FoodId) + 1;
-            _Food.Add(food);
+            var food = new Food
+            {
+                Name = foodDto.Name,
+                ServingSize = foodDto.ServingSize,
+                Calories = foodDto.Calories,
+                Protein = foodDto.Protein,
+                Carbs = foodDto.Carbs,
+                Fat = foodDto.Fat
+            };
+            
+            _context.Foods.Add(food);
+            _context.SaveChanges();
             return CreatedAtAction(nameof(GetFoodById), new { id = food.FoodId }, food);
         }
 
         [HttpGet("{id}")]
         public IActionResult GetFoodById(int id)
         {
-            var food = _Food.FirstOrDefault(f => f.FoodId == id);
+            var food = _context.Foods.Find(id);
             if (food == null)
                 return NotFound();
             return Ok(food);
@@ -32,13 +44,13 @@ namespace Website_MVC_.Controllers
         [HttpGet]
         public IActionResult GetAllFoods()
         {
-            return Ok(_Food);
+            return Ok(_context.Foods.ToList());
         }
 
         [HttpPut("{id}")]
-        public IActionResult UpdateFood( int id, FoodDto updatedFood)
+        public IActionResult UpdateFood(int id, FoodDto updatedFood)
         {
-            var food = _Food.FirstOrDefault(f => f.FoodId == id);
+            var food = _context.Foods.Find(id);
             if (food == null)
                 return NotFound();
             food.Name = updatedFood.Name;
@@ -47,17 +59,18 @@ namespace Website_MVC_.Controllers
             food.Protein = updatedFood.Protein;
             food.Carbs = updatedFood.Carbs;
             food.Fat = updatedFood.Fat;
+            _context.SaveChanges();
             return NoContent();
         }
 
         [HttpDelete("{id}")]
-        public IActionResult DeleteFoodById(int id) 
+        public IActionResult DeleteFoodById(int id)
         {
-            var food = _Food.FirstOrDefault(f => f.FoodId == id);
-
+            var food = _context.Foods.Find(id);
             if (food == null)
                 return NotFound();
-            _Food.Remove(food);
+            _context.Foods.Remove(food);
+            _context.SaveChanges();
             return NoContent();
         }
     }

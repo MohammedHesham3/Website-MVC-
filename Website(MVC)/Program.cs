@@ -1,3 +1,7 @@
+using Website_MVC_.Models;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.SqlServer;
+
 namespace Website_MVC_
 {
     public class Program
@@ -12,6 +16,10 @@ namespace Website_MVC_
             // Add Swagger services
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
+            builder.Services.AddDbContext<FoodContext>(option => {
+            option.UseSqlServer("Server=Awkward;Database=FoodDB;Trusted_Connection=True;TrustServerCertificate=True;"); 
+                }
+            );
 
             var app = builder.Build();
 
