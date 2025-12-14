@@ -12,7 +12,7 @@ namespace Website_MVC_
             // Add Swagger services
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
-
+            
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.

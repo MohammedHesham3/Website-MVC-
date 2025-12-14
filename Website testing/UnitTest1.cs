@@ -187,4 +187,213 @@ namespace Website_MVC_.Tests.Controllers
             Assert.True(createdFood2.FoodId > createdFood1.FoodId);
         }
     }
+
+    public class BmiCalculatorTests
+    {
+        [Theory]
+        [InlineData(70, 175, 22.86, "Normal weight")]
+        [InlineData(50, 160, 19.53, "Normal weight")]
+        [InlineData(100, 180, 30.86, "Obese")]
+        [InlineData(45, 170, 15.57, "Underweight")]
+        [InlineData(85, 175, 27.76, "Overweight")]
+        public void CalculateBmi_ReturnsCorrectBmiAndCategory(
+            double weight, double height, double expectedBmi, string expectedCategory)
+        {
+            var calculator = new BmiCalculator
+            {
+                Weight = weight,
+                Height = height
+            };
+
+            calculator.CalculateBmi();
+
+            Assert.NotNull(calculator.Bmi);
+            Assert.Equal(expectedBmi, calculator.Bmi.Value, 2);
+            Assert.Equal(expectedCategory, calculator.Category);
+        }
+
+        [Fact]
+        public void CalculateBmi_WithZeroHeight_DoesNotCalculate()
+        {
+            var calculator = new BmiCalculator
+            {
+                Weight = 70,
+                Height = 0
+            };
+
+            calculator.CalculateBmi();
+
+            Assert.Null(calculator.Bmi);
+            Assert.Null(calculator.Category);
+        }
+
+        [Fact]
+        public void CalculateBmi_WithZeroWeight_DoesNotCalculate()
+        {
+            var calculator = new BmiCalculator
+            {
+                Weight = 0,
+                Height = 175
+            };
+
+            calculator.CalculateBmi();
+
+            Assert.Null(calculator.Bmi);
+            Assert.Null(calculator.Category);
+        }
+
+        [Theory]
+        [InlineData(70, 175, 25, true, "moderate", 2679)]
+        [InlineData(60, 165, 30, false, "moderate", 2066)]
+        [InlineData(80, 180, 40, true, "sedentary", 2234)]
+        [InlineData(55, 160, 20, false, "active", 2475)]
+        public void CalculateMacros_ReturnsCorrectDailyCalories(
+            double weight, double height, int age, bool gender, string activityLevel, double expectedCalories)
+        {
+            var calculator = new BmiCalculator
+            {
+                Weight = weight,
+                Height = height,
+                Age = age,
+                Gender = gender,
+                ActivityLevel = activityLevel
+            };
+
+            calculator.CalculateMacros();
+
+            Assert.NotNull(calculator.DailyCalories);
+            Assert.Equal(expectedCalories, calculator.DailyCalories.Value, 0);
+        }
+
+        [Fact]
+        public void CalculateMacros_ReturnsCorrectProteinGrams()
+        {
+            var calculator = new BmiCalculator
+            {
+                Weight = 70,
+                Height = 175,
+                Age = 25,
+                Gender = true,
+                ActivityLevel = "moderate"
+            };
+
+            calculator.CalculateMacros();
+
+            Assert.NotNull(calculator.ProteinGrams);
+            Assert.Equal(140.0, calculator.ProteinGrams.Value, 1);
+        }
+
+        [Fact]
+        public void CalculateMacros_ReturnsCorrectMacronutrients()
+        {
+            var calculator = new BmiCalculator
+            {
+                Weight = 70,
+                Height = 175,
+                Age = 25,
+                Gender = true,
+                ActivityLevel = "moderate"
+            };
+
+            calculator.CalculateMacros();
+
+            Assert.NotNull(calculator.DailyCalories);
+            Assert.NotNull(calculator.ProteinGrams);
+            Assert.NotNull(calculator.FatGrams);
+            Assert.NotNull(calculator.CarbsGrams);
+
+            // Verify macros add up to daily calories
+            double totalCalories = (calculator.ProteinGrams.Value * 4) +
+                                   (calculator.FatGrams.Value * 9) +
+                                   (calculator.CarbsGrams.Value * 4);
+
+            Assert.Equal(calculator.DailyCalories.Value, totalCalories, 1);
+        }
+
+        [Theory]
+        [InlineData("sedentary")]
+        [InlineData("light")]
+        [InlineData("moderate")]
+        [InlineData("active")]
+        [InlineData("very_active")]
+        public void CalculateMacros_HandlesAllActivityLevels(string activityLevel)
+        {
+            var calculator = new BmiCalculator
+            {
+                Weight = 70,
+                Height = 175,
+                Age = 25,
+                Gender = true,
+                ActivityLevel = activityLevel
+            };
+
+            calculator.CalculateMacros();
+
+            Assert.NotNull(calculator.DailyCalories);
+            Assert.True(calculator.DailyCalories > 0);
+        }
+
+        [Fact]
+        public void CalculateMacros_WithZeroAge_DoesNotCalculate()
+        {
+            var calculator = new BmiCalculator
+            {
+                Weight = 70,
+                Height = 175,
+                Age = 0,
+                Gender = true
+            };
+
+            calculator.CalculateMacros();
+
+            Assert.Null(calculator.DailyCalories);
+            Assert.Null(calculator.ProteinGrams);
+        }
+
+        [Fact]
+        public void CalculateMacros_MaleVsFemale_DifferentResults()
+        {
+            var male = new BmiCalculator
+            {
+                Weight = 70,
+                Height = 175,
+                Age = 25,
+                Gender = true,
+                ActivityLevel = "moderate"
+            };
+
+            var female = new BmiCalculator
+            {
+                Weight = 70,
+                Height = 175,
+                Age = 25,
+                Gender = false,
+                ActivityLevel = "moderate"
+            };
+
+            male.CalculateMacros();
+            female.CalculateMacros();
+
+            Assert.NotNull(male.DailyCalories);
+            Assert.NotNull(female.DailyCalories);
+            Assert.True(male.DailyCalories > female.DailyCalories);
+        }
+
+        [Fact]
+        public void CalculateMacros_DefaultActivityLevel_UsesModerate()
+        {
+            var calculator = new BmiCalculator
+            {
+                Weight = 70,
+                Height = 175,
+                Age = 25,
+                Gender = true
+            };
+
+            calculator.CalculateMacros();
+
+            Assert.NotNull(calculator.DailyCalories);
+            Assert.True(calculator.DailyCalories > 0);
+        }
+    }
 }
