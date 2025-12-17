@@ -1,3 +1,6 @@
+using Microsoft.EntityFrameworkCore;
+using Website_MVC_.Data;
+
 namespace Website_MVC_
 {
     public class Program
@@ -8,6 +11,10 @@ namespace Website_MVC_
 
             // Add services to the container.
             builder.Services.AddControllersWithViews();
+            
+            // Add DbContext with SQL Server
+            builder.Services.AddDbContext<ApplicationDbContext>(options =>
+                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
             
             // Add Swagger services
             builder.Services.AddEndpointsApiExplorer();
