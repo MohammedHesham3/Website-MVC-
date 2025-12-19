@@ -407,4 +407,352 @@ namespace Website_MVC_.Tests.Controllers
             Assert.True(calculator.DailyCalories > 0);
         }
     }
+
+    public class BmiCalculatorControllerTests
+    {
+        private readonly BmiCalculatorController _controller;
+
+        public BmiCalculatorControllerTests()
+        {
+            _controller = new BmiCalculatorController();
+        }
+
+        [Fact]
+        public void CalculateMacros_WithValidRequest_ReturnsOkResult()
+        {
+            // Arrange
+            var request = new MacrosRequest
+            {
+                Weight = 70,
+                Height = 175,
+                Age = 25,
+                Gender = true,
+                ActivityLevel = "moderate"
+            };
+
+            // Act
+            var result = _controller.CalculateMacros(request);
+
+            // Assert
+            Assert.IsType<OkObjectResult>(result);
+        }
+
+        [Fact]
+        public void CalculateMacros_WithValidRequest_ReturnsCorrectResponseStructure()
+        {
+            // Arrange
+            var request = new MacrosRequest
+            {
+                Weight = 70,
+                Height = 175,
+                Age = 25,
+                Gender = true,
+                ActivityLevel = "moderate"
+            };
+
+            // Act
+            var result = _controller.CalculateMacros(request) as OkObjectResult;
+
+            // Assert
+            Assert.NotNull(result);
+            var response = Assert.IsType<MacrosResponse>(result.Value);
+            Assert.Equal(70, response.Weight);
+            Assert.Equal(175, response.Height);
+            Assert.Equal(25, response.Age);
+            Assert.True(response.Gender);
+            Assert.Equal("moderate", response.ActivityLevel);
+            Assert.NotNull(response.Bmi);
+            Assert.NotNull(response.Category);
+            Assert.NotNull(response.DailyCalories);
+            Assert.NotNull(response.ProteinGrams);
+            Assert.NotNull(response.CarbsGrams);
+            Assert.NotNull(response.FatGrams);
+        }
+
+        [Fact]
+        public void CalculateMacros_WithNullActivityLevel_UsesDefaultModerate()
+        {
+            // Arrange
+            var request = new MacrosRequest
+            {
+                Weight = 70,
+                Height = 175,
+                Age = 25,
+                Gender = true,
+                ActivityLevel = null
+            };
+
+            // Act
+            var result = _controller.CalculateMacros(request) as OkObjectResult;
+
+            // Assert
+            Assert.NotNull(result);
+            var response = Assert.IsType<MacrosResponse>(result.Value);
+            Assert.Equal("moderate", response.ActivityLevel);
+            Assert.NotNull(response.DailyCalories);
+        }
+
+        [Fact]
+        public void CalculateMacros_WithZeroWeight_ReturnsNullCalculations()
+        {
+            // Arrange
+            var request = new MacrosRequest
+            {
+                Weight = 0,
+                Height = 175,
+                Age = 25,
+                Gender = true,
+                ActivityLevel = "moderate"
+            };
+
+            // Act
+            var result = _controller.CalculateMacros(request) as OkObjectResult;
+
+            // Assert
+            Assert.NotNull(result);
+            var response = Assert.IsType<MacrosResponse>(result.Value);
+            Assert.Null(response.Bmi);
+            Assert.Null(response.Category);
+            Assert.Null(response.DailyCalories);
+        }
+
+        [Fact]
+        public void CalculateMacros_WithZeroHeight_ReturnsNullCalculations()
+        {
+            // Arrange
+            var request = new MacrosRequest
+            {
+                Weight = 70,
+                Height = 0,
+                Age = 25,
+                Gender = true,
+                ActivityLevel = "moderate"
+            };
+
+            // Act
+            var result = _controller.CalculateMacros(request) as OkObjectResult;
+
+            // Assert
+            Assert.NotNull(result);
+            var response = Assert.IsType<MacrosResponse>(result.Value);
+            Assert.Null(response.Bmi);
+            Assert.Null(response.Category);
+            Assert.Null(response.DailyCalories);
+        }
+
+        [Fact]
+        public void CalculateMacros_WithZeroAge_ReturnsNullMacros()
+        {
+            // Arrange
+            var request = new MacrosRequest
+            {
+                Weight = 70,
+                Height = 175,
+                Age = 0,
+                Gender = true,
+                ActivityLevel = "moderate"
+            };
+
+            // Act
+            var result = _controller.CalculateMacros(request) as OkObjectResult;
+
+            // Assert
+            Assert.NotNull(result);
+            var response = Assert.IsType<MacrosResponse>(result.Value);
+            // BMI should still be calculated
+            Assert.NotNull(response.Bmi);
+            Assert.NotNull(response.Category);
+            // But macros should be null
+            Assert.Null(response.DailyCalories);
+            Assert.Null(response.ProteinGrams);
+        }
+
+        [Theory]
+        [InlineData("sedentary")]
+        [InlineData("light")]
+        [InlineData("moderate")]
+        [InlineData("active")]
+        [InlineData("very_active")]
+        public void CalculateMacros_WithDifferentActivityLevels_ReturnsValidResults(string activityLevel)
+        {
+            // Arrange
+            var request = new MacrosRequest
+            {
+                Weight = 70,
+                Height = 175,
+                Age = 25,
+                Gender = true,
+                ActivityLevel = activityLevel
+            };
+
+            // Act
+            var result = _controller.CalculateMacros(request) as OkObjectResult;
+
+            // Assert
+            Assert.NotNull(result);
+            var response = Assert.IsType<MacrosResponse>(result.Value);
+            Assert.Equal(activityLevel, response.ActivityLevel);
+            Assert.NotNull(response.DailyCalories);
+            Assert.True(response.DailyCalories > 0);
+        }
+
+        [Fact]
+        public void CalculateMacros_MaleVsFemale_ReturnsDifferentCalories()
+        {
+            // Arrange
+            var maleRequest = new MacrosRequest
+            {
+                Weight = 70,
+                Height = 175,
+                Age = 25,
+                Gender = true,
+                ActivityLevel = "moderate"
+            };
+
+            var femaleRequest = new MacrosRequest
+            {
+                Weight = 70,
+                Height = 175,
+                Age = 25,
+                Gender = false,
+                ActivityLevel = "moderate"
+            };
+
+            // Act
+            var maleResult = _controller.CalculateMacros(maleRequest) as OkObjectResult;
+            var femaleResult = _controller.CalculateMacros(femaleRequest) as OkObjectResult;
+
+            // Assert
+            Assert.NotNull(maleResult);
+            Assert.NotNull(femaleResult);
+            var maleResponse = Assert.IsType<MacrosResponse>(maleResult.Value);
+            var femaleResponse = Assert.IsType<MacrosResponse>(femaleResult.Value);
+            Assert.True(maleResponse.DailyCalories > femaleResponse.DailyCalories);
+        }
+
+        [Theory]
+        [InlineData(70, 175, 22.86, "Normal weight")]
+        [InlineData(50, 160, 19.53, "Normal weight")]
+        [InlineData(100, 180, 30.86, "Obese")]
+        [InlineData(45, 170, 15.57, "Underweight")]
+        [InlineData(85, 175, 27.76, "Overweight")]
+        public void CalculateMacros_ReturnsCorrectBmiAndCategory(
+            double weight, double height, double expectedBmi, string expectedCategory)
+        {
+            // Arrange
+            var request = new MacrosRequest
+            {
+                Weight = weight,
+                Height = height,
+                Age = 25,
+                Gender = true,
+                ActivityLevel = "moderate"
+            };
+
+            // Act
+            var result = _controller.CalculateMacros(request) as OkObjectResult;
+
+            // Assert
+            Assert.NotNull(result);
+            var response = Assert.IsType<MacrosResponse>(result.Value);
+            Assert.NotNull(response.Bmi);
+            Assert.Equal(expectedBmi, response.Bmi.Value, 2);
+            Assert.Equal(expectedCategory, response.Category);
+        }
+
+        [Fact]
+        public void CalculateMacros_WithNegativeWeight_ReturnsNullCalculations()
+        {
+            // Arrange
+            var request = new MacrosRequest
+            {
+                Weight = -70,
+                Height = 175,
+                Age = 25,
+                Gender = true,
+                ActivityLevel = "moderate"
+            };
+
+            // Act
+            var result = _controller.CalculateMacros(request) as OkObjectResult;
+
+            // Assert
+            Assert.NotNull(result);
+            var response = Assert.IsType<MacrosResponse>(result.Value);
+            Assert.Null(response.Bmi);
+            Assert.Null(response.DailyCalories);
+        }
+
+        [Fact]
+        public void CalculateMacros_WithNegativeHeight_ReturnsNullCalculations()
+        {
+            // Arrange
+            var request = new MacrosRequest
+            {
+                Weight = 70,
+                Height = -175,
+                Age = 25,
+                Gender = true,
+                ActivityLevel = "moderate"
+            };
+
+            // Act
+            var result = _controller.CalculateMacros(request) as OkObjectResult;
+
+            // Assert
+            Assert.NotNull(result);
+            var response = Assert.IsType<MacrosResponse>(result.Value);
+            Assert.Null(response.Bmi);
+            Assert.Null(response.DailyCalories);
+        }
+
+        [Fact]
+        public void CalculateMacros_WithNegativeAge_ReturnsNullMacros()
+        {
+            // Arrange
+            var request = new MacrosRequest
+            {
+                Weight = 70,
+                Height = 175,
+                Age = -25,
+                Gender = true,
+                ActivityLevel = "moderate"
+            };
+
+            // Act
+            var result = _controller.CalculateMacros(request) as OkObjectResult;
+
+            // Assert
+            Assert.NotNull(result);
+            var response = Assert.IsType<MacrosResponse>(result.Value);
+            Assert.NotNull(response.Bmi);
+            Assert.Null(response.DailyCalories);
+        }
+
+        [Fact]
+        public void CalculateMacros_WithExtremeValues_HandlesCorrectly()
+        {
+            // Arrange
+            var request = new MacrosRequest
+            {
+                Weight = 200,
+                Height = 220,
+                Age = 60,
+                Gender = true,
+                ActivityLevel = "very_active"
+            };
+
+            // Act
+            var result = _controller.CalculateMacros(request) as OkObjectResult;
+
+            // Assert
+            Assert.NotNull(result);
+            var response = Assert.IsType<MacrosResponse>(result.Value);
+            Assert.NotNull(response.Bmi);
+            Assert.NotNull(response.DailyCalories);
+            Assert.NotNull(response.ProteinGrams);
+            Assert.True(response.DailyCalories > 0);
+            Assert.True(response.ProteinGrams > 0);
+        }
+    }
 }
