@@ -1,0 +1,48 @@
+name: CI/CD Pipeline
+
+on:  
+  push:
+    branches:   [ main, develop ]
+  pull_request:
+    branches:  [ main, develop ]
+
+jobs: 
+  build:
+    runs-on:   windows-latest
+    
+    steps:  
+    - uses: actions/checkout@v3
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with: 
+        dotnet-version: '6.0.x'
+    
+    - name:  Restore dependencies
+      run: dotnet restore "Website(MVC).sln"
+    
+    - name: Build
+      run: dotnet build "Website(MVC).sln" --configuration Release --no-restore
+    
+    - name: Run tests
+      run:   dotnet test "Website testing" --configuration Release --no-build --verbosity normal
+      continue-on-error: true
+    
+    - name:  Publish
+      run: dotnet publish "Website(MVC)" -c Release -o ./publish
+      if: github. ref == 'refs/heads/main' && github.event_name == 'push'
+
+  code-quality:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup . NET
+      uses: actions/setup-dotnet@v3
+      with:  
+        dotnet-version:  '6.0.x'
+    
+    - name: Run code analysis
+      run: dotnet build "Website(MVC).sln" /p:EnforceCodeStyleInBuild=true
+      continue-on-error: true
