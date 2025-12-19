@@ -1,12 +1,6 @@
 # Software Requirements Specification
 # Nutrition and BMI Tracking System
 
-Version: 1.0  
-Date: December 19, 2025  
-Technology: ASP.NET Core 8.0 MVC  
-
-
-
 # 1. Project Overview
 
 # 1.1 Purpose
