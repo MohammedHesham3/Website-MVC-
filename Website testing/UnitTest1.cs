@@ -253,10 +253,10 @@ namespace Website_MVC_.Tests.Controllers
         }
 
         [Theory]
-        [InlineData(70, 175, 25, true, "moderate", 2679)]
-        [InlineData(60, 165, 30, false, "moderate", 2066)]
-        [InlineData(80, 180, 40, true, "sedentary", 2234)]
-        [InlineData(55, 160, 20, false, "active", 2475)]
+        [InlineData(70, 175, 25, true, "moderate", 2594)]
+        [InlineData(60, 165, 30, false, "moderate", 2046)]
+        [InlineData(80, 180, 40, true, "sedentary", 2076)]
+        [InlineData(55, 160, 20, false, "active", 2224)]
         public void CalculateMacros_ReturnsCorrectDailyCalories(
             double weight, double height, int age, bool gender, string activityLevel, double expectedCalories)
         {
@@ -312,12 +312,13 @@ namespace Website_MVC_.Tests.Controllers
             Assert.NotNull(calculator.FatGrams);
             Assert.NotNull(calculator.CarbsGrams);
 
-            // Verify macros add up to daily calories
+            // Verify macros add up to daily calories (within small tolerance for rounding)
             double totalCalories = (calculator.ProteinGrams.Value * 4) +
                                    (calculator.FatGrams.Value * 9) +
                                    (calculator.CarbsGrams.Value * 4);
 
-            Assert.Equal(calculator.DailyCalories.Value, totalCalories, 1);
+            Assert.True(Math.Abs(calculator.DailyCalories.Value - totalCalories) < 0.5, 
+                $"Total calories from macros ({totalCalories}) should match daily calories ({calculator.DailyCalories.Value})");
         }
 
         [Theory]

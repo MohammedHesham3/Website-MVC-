@@ -30,9 +30,13 @@ namespace Website_MVC_
                 app.UseHsts();
             }
 
-            // Enable Swagger middleware
+            // Enable Swagger middleware (in all environments)
             app.UseSwagger();
-            app.UseSwaggerUI();
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
+                c.RoutePrefix = string.Empty; // Set Swagger UI at app root (http://localhost:port/)
+            });
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
