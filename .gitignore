@@ -6,3 +6,7 @@ obj/
 *.cache
 *.cache.json
 *.db
+
+# Azure deployment artifacts
+publish/
+*.zip
