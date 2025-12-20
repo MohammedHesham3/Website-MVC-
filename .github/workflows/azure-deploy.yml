@@ -8,6 +8,9 @@ on:
 env:
   DOTNET_VERSION: '8.0.x'
   AZURE_WEBAPP_PACKAGE_PATH: './publish'
+  SOLUTION_PATH: 'Website(MVC).sln'
+  PROJECT_PATH: 'Website(MVC)/Website(MVC).csproj'
+  TEST_PROJECT_PATH: 'Website testing/Website testing.csproj'
 
 jobs:
   build-and-deploy:
@@ -26,19 +29,19 @@ jobs:
     
     # Restore NuGet packages
     - name: Restore dependencies
-      run: dotnet restore "Website(MVC).sln"
+      run: dotnet restore "${{ env.SOLUTION_PATH }}"
     
     # Build the project
     - name: Build
-      run: dotnet build "Website(MVC).sln" --configuration Release --no-restore
+      run: dotnet build "${{ env.SOLUTION_PATH }}" --configuration Release --no-restore
     
     # Run tests
     - name: Run tests
-      run: dotnet test "Website testing/Website testing.csproj" --configuration Release --no-build --verbosity normal
+      run: dotnet test "${{ env.TEST_PROJECT_PATH }}" --configuration Release --no-build --verbosity normal
     
     # Publish the application
     - name: Publish
-      run: dotnet publish "Website(MVC)/Website(MVC).csproj" --configuration Release --no-build --output ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+      run: dotnet publish "${{ env.PROJECT_PATH }}" --configuration Release --no-build --output ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
     
     # Deploy to Azure App Service
     - name: Deploy to Azure App Service

@@ -38,8 +38,10 @@ The publish profile for your Azure App Service. This contains authentication cre
 ## Deployment Workflow
 
 The deployment workflow is triggered automatically when:
-- Code is pushed to the `main` branch
+- Code is pushed to the `main` branch (including merged pull requests)
 - Manual trigger via GitHub Actions UI (workflow_dispatch)
+
+**Note:** Pull requests to `main` do not trigger deployment automatically. Deployment only occurs after code is merged or directly pushed to the `main` branch.
 
 ### Workflow Steps
 
