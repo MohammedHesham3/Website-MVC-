@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+Microsoft.EntityFrameworkCore;
 using Website_MVC_.Data;
 
 namespace Website_MVC_
@@ -12,15 +12,33 @@ namespace Website_MVC_
             // Add services to the container.
             builder.Services.AddControllersWithViews();
             
-            // Add DbContext with SQL Server
+            // Use In-Memory Database for Azure deployment
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+                options.UseInMemoryDatabase("FoodTrackerDb"));
             
             // Add Swagger services
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
+            // Add CORS for frontend
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowFrontend", policy =>
+                {
+                    policy.AllowAnyOrigin()  // For now, allow all origins
+                          .AllowAnyHeader()
+                          .AllowAnyMethod();
+                });
+            });
+
             var app = builder.Build();
+
+            // Seed data on startup for in-memory DB
+            using (var scope = app.Services.CreateScope())
+            {
+                var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                context.Database.EnsureCreated();
+            }
 
             // Configure the HTTP request pipeline.
             if (!app.Environment.IsDevelopment())
@@ -34,14 +52,17 @@ namespace Website_MVC_
             app.UseSwagger();
             app.UseSwaggerUI(c =>
             {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
-                c.RoutePrefix = string.Empty; // Set Swagger UI at app root (http://localhost:port/)
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Nutrition API V1");
+                c.RoutePrefix = string.Empty; // Swagger at root
             });
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
 
             app.UseRouting();
+
+            // Enable CORS - MUST be between UseRouting and UseAuthorization
+            app.UseCors("AllowFrontend");
 
             app.UseAuthorization();
 
