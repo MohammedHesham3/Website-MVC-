@@ -16,8 +16,8 @@ Server=.;Database=FoodTrackerDb;Trusted_Connection=true;TrustServerCertificate=t
 - .NET 8.0 SDK
 
 ### Running Locally
-1. The application will automatically create the database on first run in Development mode
-2. Sample data (Apple) is seeded via Entity Framework migrations
+1. The application will automatically apply migrations and create the database on first run in Development mode
+2. Sample data (Apple) is defined in `ApplicationDbContext.cs` using Entity Framework's `HasData()` method, which is included in the initial migration
 
 ## Azure Deployment Setup
 
@@ -41,6 +41,8 @@ az sql server firewall-rule create --resource-group <resource-group> --server <s
 ```
 
 ### 3. Set Connection String in Azure
+
+> **⚠️ SECURITY WARNING:** The `appsettings.Production.json` file contains a placeholder connection string template. **NEVER commit actual database credentials to source control!** Always use Azure Key Vault or App Service Application Settings to manage sensitive connection strings.
 
 In your Azure Web App configuration, add the connection string as an environment variable or in Application Settings:
 
