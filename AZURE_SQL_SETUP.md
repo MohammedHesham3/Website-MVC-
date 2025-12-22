@@ -76,7 +76,7 @@ Modify `Program.cs` to run `context.Database.Migrate()` on startup (currently di
 
 ## Database Seeding
 
-Sample data is configured in `ApplicationDbContext.cs` using the `OnModelCreating` method. This data will be seeded when migrations are applied.
+Sample data (Apple) is configured in `ApplicationDbContext.cs` using the `OnModelCreating` method and is included in the initial migration file (`20251217180715_InitialCreate.cs`). This data will be automatically seeded when migrations are applied using `dotnet ef database update` or `context.Database.Migrate()`.
 
 ## Troubleshooting
 
