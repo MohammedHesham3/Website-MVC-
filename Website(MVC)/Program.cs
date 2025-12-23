@@ -13,9 +13,12 @@ namespace Website_MVC_
             // Add services to the container.
             builder.Services.AddControllersWithViews();
             
-            // Use In-Memory Database for Azure deployment
+            // Use SQL Server Database (supports both local development and Azure SQL Database)
+            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
+                ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+            
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseInMemoryDatabase("FoodTrackerDb"));
+                options.UseSqlServer(connectionString));
             
             // Add Swagger services
             builder.Services.AddEndpointsApiExplorer();
@@ -35,50 +38,14 @@ namespace Website_MVC_
 
             var app = builder.Build();
 
-            // Seed data on startup for in-memory DB
-            using (var scope = app.Services.CreateScope())
+            // Apply migrations on startup (use for development)
+            // For production Azure deployments, run migrations separately using Azure DevOps or GitHub Actions
+            if (app.Environment.IsDevelopment())
             {
-                var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-                context.Database.EnsureCreated();
-                
-                // Manually seed the Apple data if it doesn't exist
-                if (!context.Foods.Any())
+                using (var scope = app.Services.CreateScope())
                 {
-                    context.Foods.Add(new Food
-                    {
-                        FoodId = 1,
-                        Name = "Apple",
-                        ServingSize = 100,
-                        Calories = 52,
-                        Protein = 0.3f,
-                        Carbs = 13.8f,
-                        Fat = 0.2f
-                    });
-                    
-                    // Add a few more sample foods for testing
-                    context.Foods.Add(new Food
-                    {
-                        FoodId = 2,
-                        Name = "Banana",
-                        ServingSize = 120,
-                        Calories = 89,
-                        Protein = 1.1f,
-                        Carbs = 22.8f,
-                        Fat = 0.3f
-                    });
-                    
-                    context.Foods.Add(new Food
-                    {
-                        FoodId = 3,
-                        Name = "Chicken Breast",
-                        ServingSize = 100,
-                        Calories = 165,
-                        Protein = 31.0f,
-                        Carbs = 0.0f,
-                        Fat = 3.6f
-                    });
-                    
-                    context.SaveChanges();
+                    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                    context.Database.Migrate();
                 }
             }
 
